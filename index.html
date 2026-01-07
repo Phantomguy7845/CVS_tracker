@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0D9488">
+  <title>GBKK4 Field Tracker</title>
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      /* Mint Theme - High Contrast for Outdoor Use */
+      --mint-50: #F0FDFA;
+      --mint-100: #CCFBF1;
+      --mint-200: #99F6E4;
+      --mint-300: #5EEAD4;
+      --mint-400: #2DD4BF;
+      --mint-500: #14B8A6;
+      --mint-600: #0D9488;
+      --mint-700: #0F766E;
+      --mint-800: #115E59;
+      --mint-900: #134E4A;
+      
+      --bg-primary: #FFFFFF;
+      --bg-secondary: #F8FAFB;
+      --bg-card: #FFFFFF;
+      
+      --text-primary: #1A1A1A;
+      --text-secondary: #4A5568;
+      --text-muted: #718096;
+      
+      --success: #059669;
+      --warning: #D97706;
+      --error: #DC2626;
+      
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+      
+      --radius: 16px;
+      --radius-sm: 12px;
+      --radius-lg: 20px;
+      
+      --header-height: 64px;
+      --safe-bottom: env(safe-area-inset-bottom, 16px);
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    html, body {
+      font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 16px;
+      line-height: 1.5;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    /* ===== HEADER ===== */
+    .header {
+      position: sticky;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: linear-gradient(135deg, var(--mint-600) 0%, var(--mint-700) 100%);
+      padding: 12px 16px;
+      box-shadow: var(--shadow-md);
+    }
+    
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    
+    .app-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .app-title-icon {
+      font-size: 24px;
+    }
+    
+    .badge-container {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .badge {
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(10px);
+      color: #FFFFFF;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .badge-number {
+      background: #FFFFFF;
+      color: var(--mint-700);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+    
+    .header-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    
+    .search-box {
+      flex: 1;
+      position: relative;
+    }
+    
+    .search-input {
+      width: 100%;
+      height: 48px;
+      padding: 0 16px 0 44px;
+      border: 2px solid transparent;
+      border-radius: var(--radius-sm);
+      background: #FFFFFF;
+      font-size: 16px;
+      font-family: inherit;
+      color: var(--text-primary);
+      transition: all 0.2s;
+    }
+    
+    .search-input:focus {
+      outline: none;
+      border-color: var(--mint-400);
+      box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.2);
+    }
+    
+    .search-input::placeholder {
+      color: var(--text-muted);
+    }
+    
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 20px;
+      pointer-events: none;
+    }
+    
+    .sort-select {
+      height: 48px;
+      padding: 0 36px 0 14px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: #FFFFFF url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%234A5568' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E") no-repeat right 12px center;
+      font-size: 15px;
+      font-family: inherit;
+      font-weight: 500;
+      color: var(--text-primary);
+      cursor: pointer;
+      appearance: none;
+      min-width: 100px;
+    }
+    
+    .btn-icon {
+      width: 48px;
+      height: 48px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: #FFFFFF;
+      color: var(--mint-700);
+      font-size: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    
+    .btn-icon:active {
+      transform: scale(0.95);
+      background: var(--mint-100);
+    }
+    
+    .btn-icon.danger {
+      color: var(--error);
+    }
+    
+    .btn-icon.danger:active {
+      background: #FEE2E2;
+    }
+    
+    /* ===== MAIN CONTENT ===== */
+    .main-content {
+      padding: 16px;
+      padding-bottom: calc(16px + var(--safe-bottom));
+    }
+    
+    /* ===== LOADING STATE ===== */
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      gap: 16px;
+    }
+    
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid var(--mint-200);
+      border-top-color: var(--mint-600);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+      font-size: 16px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    
+    /* ===== PLACE CARDS ===== */
+    .place-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .place-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow-md);
+      border: 1px solid rgba(0,0,0,0.04);
+      transition: all 0.2s;
+    }
+    
+    .place-card:active {
+      transform: scale(0.99);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .place-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    
+    .place-id {
+      background: linear-gradient(135deg, var(--mint-500) 0%, var(--mint-600) 100%);
+      color: #FFFFFF;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      flex-shrink: 0;
+      min-width: 48px;
+      text-align: center;
+    }
+    
+    .place-info {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .place-name {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.4;
+      word-break: break-word;
+    }
+    
+    .place-coords {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    
+    .place-coords.no-coords {
+      color: var(--warning);
+      font-weight: 500;
+    }
+    
+    .place-coords-icon {
+      font-size: 14px;
+    }
+    
+    .place-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    
+    .btn {
+      height: 50px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 16px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .btn:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+    
+    .btn-navigate {
+      background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+      color: #FFFFFF;
+    }
+    
+    .btn-navigate:active:not(:disabled) {
+      background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    }
+    
+    .btn-visited {
+      background: linear-gradient(135deg, var(--mint-500) 0%, var(--mint-600) 100%);
+      color: #FFFFFF;
+    }
+    
+    .btn-visited:active:not(:disabled) {
+      background: linear-gradient(135deg, var(--mint-600) 0%, var(--mint-700) 100%);
+    }
+    
+    .btn-visited.loading {
+      background: var(--mint-300);
+    }
+    
+    /* ===== EMPTY STATE ===== */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+    }
+    
+    .empty-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+    
+    .empty-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    
+    .empty-text {
+      font-size: 16px;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+    
+    /* ===== COMPLETE STATE ===== */
+    .complete-state {
+      background: linear-gradient(135deg, var(--mint-500) 0%, var(--mint-600) 100%);
+      border-radius: var(--radius-lg);
+      padding: 40px 24px;
+      text-align: center;
+      color: #FFFFFF;
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .complete-icon {
+      font-size: 72px;
+      margin-bottom: 16px;
+      animation: bounce 1s ease infinite;
+    }
+    
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    .complete-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    
+    .complete-text {
+      font-size: 18px;
+      opacity: 0.9;
+      margin-bottom: 24px;
+    }
+    
+    .btn-restart {
+      background: #FFFFFF;
+      color: var(--mint-700);
+      height: 56px;
+      padding: 0 32px;
+      font-size: 18px;
+    }
+    
+    .btn-restart:active {
+      background: var(--mint-100);
+    }
+    
+    /* ===== MAP SECTION ===== */
+    .map-section {
+      margin-top: 20px;
+    }
+    
+    .map-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    
+    .map-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .map-title-icon {
+      font-size: 22px;
+    }
+    
+    .gps-status {
+      font-size: 13px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .gps-status.active {
+      background: #D1FAE5;
+      color: #065F46;
+    }
+    
+    .gps-status.inactive {
+      background: #FEE2E2;
+      color: #991B1B;
+    }
+    
+    .gps-status.loading {
+      background: #FEF3C7;
+      color: #92400E;
+    }
+    
+    .map-container {
+      height: 300px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      border: 2px solid var(--mint-200);
+    }
+    
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+    
+    /* Leaflet Popup Customization */
+    .leaflet-popup-content-wrapper {
+      border-radius: var(--radius-sm) !important;
+      box-shadow: var(--shadow-lg) !important;
+    }
+    
+    .leaflet-popup-content {
+      margin: 12px 14px !important;
+      font-family: 'Sarabun', sans-serif !important;
+    }
+    
+    .popup-content {
+      text-align: center;
+    }
+    
+    .popup-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 10px;
+      line-height: 1.3;
+    }
+    
+    .popup-btn {
+      width: 100%;
+      height: 40px;
+      background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s;
+    }
+    
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .modal {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      width: 100%;
+      max-width: 340px;
+      box-shadow: var(--shadow-lg);
+      transform: scale(0.9);
+      transition: transform 0.2s;
+    }
+    
+    .modal-overlay.active .modal {
+      transform: scale(1);
+    }
+    
+    .modal-icon {
+      font-size: 48px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    
+    .modal-title {
+      font-size: 20px;
+      font-weight: 700;
+      text-align: center;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    
+    .modal-text {
+      font-size: 15px;
+      text-align: center;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+    
+    .modal-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    
+    .btn-cancel {
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+    
+    .btn-confirm {
+      background: linear-gradient(135deg, var(--mint-500) 0%, var(--mint-600) 100%);
+      color: #FFFFFF;
+    }
+    
+    .btn-confirm.danger {
+      background: linear-gradient(135deg, var(--error) 0%, #B91C1C 100%);
+    }
+    
+    /* ===== TOAST ===== */
+    .toast-container {
+      position: fixed;
+      bottom: calc(20px + var(--safe-bottom));
+      left: 16px;
+      right: 16px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+    
+    .toast {
+      background: var(--text-primary);
+      color: #FFFFFF;
+      padding: 14px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: var(--shadow-lg);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: auto;
+    }
+    
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    
+    .toast.success {
+      background: var(--success);
+    }
+    
+    .toast.error {
+      background: var(--error);
+    }
+    
+    .toast.warning {
+      background: var(--warning);
+    }
+    
+    .toast-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    
+    /* ===== UTILITY ===== */
+    .hidden {
+      display: none !important;
+    }
+    
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: var(--mint-300);
+      border-radius: 4px;
+    }
+    
+    /* Focus visible */
+    :focus-visible {
+      outline: 3px solid var(--mint-400);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-top">
+      <h1 class="app-title">
+        <span class="app-title-icon">📍</span>
+        GBKK4 Tracker
+      </h1>
+      <div class="badge-container">
+        <div class="badge">
+          เหลือ <span class="badge-number" id="remainingBadge">-</span>
+        </div>
+      </div>
+    </div>
+    <div class="header-controls">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input 
+          type="text" 
+          class="search-input" 
+          id="searchInput"
+          placeholder="ค้นหา ID หรือชื่อ..."
+          autocomplete="off"
+        >
+      </div>
+      <select class="sort-select" id="sortSelect">
+        <option value="default">ค่าเดิม</option>
+        <option value="nearby">ใกล้ฉัน</option>
+      </select>
+      <button class="btn-icon" id="refreshBtn" title="รีเฟรช">
+        🔄
+      </button>
+      <button class="btn-icon danger" id="resetAllBtn" title="ล้างทั้งหมด">
+        🗑️
+      </button>
+    </div>
+  </header>
+  
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Loading State -->
+    <div class="loading-container" id="loadingState">
+      <div class="spinner"></div>
+      <p class="loading-text">กำลังโหลดข้อมูล...</p>
+    </div>
+    
+    <!-- Place List -->
+    <div class="place-list hidden" id="placeList"></div>
+    
+    <!-- Empty State -->
+    <div class="empty-state hidden" id="emptyState">
+      <div class="empty-icon">🔍</div>
+      <h2 class="empty-title">ไม่พบข้อมูล</h2>
+      <p class="empty-text">ลองค้นหาด้วยคำอื่น หรือกดรีเฟรช</p>
+    </div>
+    
+    <!-- Complete State -->
+    <div class="complete-state hidden" id="completeState">
+      <div class="complete-icon">🎉</div>
+      <h2 class="complete-title">ครบแล้ว!</h2>
+      <p class="complete-text">คุณไปครบทุกสถานที่แล้ว</p>
+      <button class="btn btn-restart" id="restartBtn">
+        🔄 เริ่มใหม่
+      </button>
+    </div>
+    
+    <!-- Map Section -->
+    <section class="map-section" id="mapSection">
+      <div class="map-header">
+        <h2 class="map-title">
+          <span class="map-title-icon">🗺️</span>
+          แผนที่
+        </h2>
+        <div class="gps-status loading" id="gpsStatus">
+          <span>⏳</span>
+          <span id="gpsText">กำลังหา GPS...</span>
+        </div>
+      </div>
+      <div class="map-container">
+        <div id="map"></div>
+      </div>
+    </section>
+  </main>
+  
+  <!-- Confirm Modal -->
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal">
+      <div class="modal-icon" id="modalIcon">✅</div>
+      <h3 class="modal-title" id="modalTitle">ยืนยันการดำเนินการ</h3>
+      <p class="modal-text" id="modalText">คุณต้องการดำเนินการนี้หรือไม่?</p>
+      <div class="modal-actions">
+        <button class="btn btn-cancel" id="modalCancel">ยกเลิก</button>
+        <button class="btn btn-confirm" id="modalConfirm">ยืนยัน</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+  
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  
+  <script>
+    // ===== STATE =====
+    let allPlaces = [];
+    let filteredPlaces = [];
+    let userLocation = null;
+    let map = null;
+    let userMarker = null;
+    let placeMarkers = [];
+    let isLoading = false;
+    let pendingAction = null;
+    
+    // ===== DOM ELEMENTS =====
+    const $ = (id) => document.getElementById(id);
+    const loadingState = $('loadingState');
+    const placeList = $('placeList');
+    const emptyState = $('emptyState');
+    const completeState = $('completeState');
+    const mapSection = $('mapSection');
+    const searchInput = $('searchInput');
+    const sortSelect = $('sortSelect');
+    const refreshBtn = $('refreshBtn');
+    const resetAllBtn = $('resetAllBtn');
+    const restartBtn = $('restartBtn');
+    const remainingBadge = $('remainingBadge');
+    const gpsStatus = $('gpsStatus');
+    const gpsText = $('gpsText');
+    const confirmModal = $('confirmModal');
+    const modalIcon = $('modalIcon');
+    const modalTitle = $('modalTitle');
+    const modalText = $('modalText');
+    const modalCancel = $('modalCancel');
+    const modalConfirm = $('modalConfirm');
+    const toastContainer = $('toastContainer');
+    
+    // ===== UTILITIES =====
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    function showToast(message, type = 'info') {
+      const icons = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+      };
+      
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `
+        <span class="toast-icon">${icons[type]}</span>
+        <span>${escapeHtml(message)}</span>
+      `;
+      toastContainer.appendChild(toast);
+      
+      requestAnimationFrame(() => {
+        toast.classList.add('show');
+      });
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+    
+    function showModal(icon, title, text, confirmText = 'ยืนยัน', isDanger = false) {
+      return new Promise((resolve) => {
+        modalIcon.textContent = icon;
+        modalTitle.textContent = title;
+        modalText.textContent = text;
+        modalConfirm.textContent = confirmText;
+        modalConfirm.classList.toggle('danger', isDanger);
+        confirmModal.classList.add('active');
+        
+        pendingAction = resolve;
+      });
+    }
+    
+    function hideModal() {
+      confirmModal.classList.remove('active');
+      pendingAction = null;
+    }
+    
+    modalCancel.addEventListener('click', () => {
+      if (pendingAction) pendingAction(false);
+      hideModal();
+    });
+    
+    modalConfirm.addEventListener('click', () => {
+      if (pendingAction) pendingAction(true);
+      hideModal();
+    });
+    
+    // Close modal on overlay click
+    confirmModal.addEventListener('click', (e) => {
+      if (e.target === confirmModal) {
+        if (pendingAction) pendingAction(false);
+        hideModal();
+      }
+    });
+    
+    function calculateDistance(lat1, lng1, lat2, lng2) {
+      if (!lat1 || !lng1 || !lat2 || !lng2) return Infinity;
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLng = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLng/2) * Math.sin(dLng/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+    
+    function openNavigation(place) {
+      // Priority 1: Use mapsUrl if available
+      if (place.mapsUrl && place.mapsUrl.trim()) {
+        window.open(place.mapsUrl.trim(), '_blank');
+        return;
+      }
+      
+      // Priority 2: Fallback to lat/lng navigation
+      if (place.lat && place.lng) {
+        const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}&travelmode=driving&dir_action=navigate`;
+        window.open(navUrl, '_blank');
+        return;
+      }
+      
+      // No navigation available
+      showToast('ไม่มีลิงก์นำทาง', 'warning');
+    }
+    
+    // ===== RENDER =====
+    function showState(state) {
+      loadingState.classList.toggle('hidden', state !== 'loading');
+      placeList.classList.toggle('hidden', state !== 'list');
+      emptyState.classList.toggle('hidden', state !== 'empty');
+      completeState.classList.toggle('hidden', state !== 'complete');
+      mapSection.classList.toggle('hidden', state === 'loading' || state === 'complete');
+    }
+    
+    function renderPlaces() {
+      if (filteredPlaces.length === 0 && allPlaces.length > 0) {
+        showState('empty');
+        return;
+      }
+      
+      if (allPlaces.length === 0) {
+        showState('complete');
+        return;
+      }
+      
+      showState('list');
+      
+      placeList.innerHTML = filteredPlaces.map(place => {
+        const hasCoords = place.lat && place.lng;
+        const coordsHtml = hasCoords 
+          ? `<span class="place-coords-icon">📍</span> ${place.lat.toFixed(6)}, ${place.lng.toFixed(6)}`
+          : `<span class="place-coords-icon">⚠️</span> ไม่มีพิกัด`;
+        
+        return `
+          <div class="place-card" data-id="${escapeHtml(String(place.id))}">
+            <div class="place-header">
+              <span class="place-id">${escapeHtml(String(place.id))}</span>
+              <div class="place-info">
+                <h3 class="place-name">${escapeHtml(place.name)}</h3>
+                <div class="place-coords ${hasCoords ? '' : 'no-coords'}">
+                  ${coordsHtml}
+                </div>
+              </div>
+            </div>
+            <div class="place-actions">
+              <button class="btn btn-navigate" onclick="handleNavigate('${escapeHtml(String(place.id))}')">
+                🧭 นำทาง
+              </button>
+              <button class="btn btn-visited" id="visitBtn-${escapeHtml(String(place.id))}" onclick="handleMarkVisited('${escapeHtml(String(place.id))}')">
+                ✅ ไปแล้ว
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      updateMap();
+    }
+    
+    function updateBadge(remaining, total) {
+      remainingBadge.textContent = `${remaining}/${total}`;
+    }
+    
+    // ===== MAP =====
+    function initMap() {
+      map = L.map('map', {
+        zoomControl: false
+      }).setView([13.7563, 100.5018], 11);
+      
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap',
+        maxZoom: 19
+      }).addTo(map);
+      
+      L.control.zoom({ position: 'topright' }).addTo(map);
+    }
+    
+    function updateMap() {
+      // Clear existing markers
+      placeMarkers.forEach(m => m.remove());
+      placeMarkers = [];
+      
+      // Add place markers
+      const bounds = [];
+      
+      filteredPlaces.forEach(place => {
+        if (place.lat && place.lng) {
+          const marker = L.marker([place.lat, place.lng], {
+            icon: L.divIcon({
+              className: 'custom-marker',
+              html: `<div style="
+                background: linear-gradient(135deg, #14B8A6, #0D9488);
+                width: 32px;
+                height: 32px;
+                border-radius: 50% 50% 50% 0;
+                transform: rotate(-45deg);
+                border: 3px solid white;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              "><span style="transform: rotate(45deg); font-size: 12px; font-weight: bold; color: white;">${place.id}</span></div>`,
+              iconSize: [32, 32],
+              iconAnchor: [16, 32],
+              popupAnchor: [0, -32]
+            })
+          }).addTo(map);
+          
+          marker.bindPopup(`
+            <div class="popup-content">
+              <div class="popup-name">[${escapeHtml(String(place.id))}] ${escapeHtml(place.name)}</div>
+              <button class="popup-btn" onclick="openNavigation(window.placesMap['${place.id}'])">
+                🧭 นำทาง
+              </button>
+            </div>
+          `);
+          
+          placeMarkers.push(marker);
+          bounds.push([place.lat, place.lng]);
+        }
+      });
+      
+      // Add user location to bounds if available
+      if (userLocation) {
+        bounds.push([userLocation.lat, userLocation.lng]);
+      }
+      
+      // Fit bounds
+      if (bounds.length > 0) {
+        map.fitBounds(bounds, { padding: [30, 30], maxZoom: 14 });
+      }
+    }
+    
+    function updateUserMarker() {
+      if (!userLocation) return;
+      
+      if (userMarker) {
+        userMarker.setLatLng([userLocation.lat, userLocation.lng]);
+      } else {
+        userMarker = L.marker([userLocation.lat, userLocation.lng], {
+          icon: L.divIcon({
+            className: 'user-marker',
+            html: `<div style="
+              background: #3B82F6;
+              width: 20px;
+              height: 20px;
+              border-radius: 50%;
+              border: 4px solid white;
+              box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4), 0 2px 8px rgba(0,0,0,0.3);
+            "></div>`,
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+          }),
+          zIndexOffset: 1000
+        }).addTo(map);
+        
+        userMarker.bindPopup('<div style="text-align: center; font-weight: 600;">📍 ตำแหน่งของคุณ</div>');
+      }
+    }
+    
+    // ===== GEOLOCATION =====
+    function requestLocation() {
+      if (!navigator.geolocation) {
+        setGpsStatus('inactive', 'ไม่รองรับ GPS');
+        return;
+      }
+      
+      setGpsStatus('loading', 'กำลังหา GPS...');
+      
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          userLocation = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude
+          };
+          setGpsStatus('active', 'GPS พร้อม');
+          updateUserMarker();
+          
+          if (sortSelect.value === 'nearby') {
+            filterAndSort();
+          } else {
+            updateMap();
+          }
+        },
+        (err) => {
+          console.warn('Geolocation error:', err);
+          setGpsStatus('inactive', 'ไม่มี GPS');
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000
+        }
+      );
+    }
+    
+    function setGpsStatus(status, text) {
+      gpsStatus.className = `gps-status ${status}`;
+      const icons = { active: '✅', inactive: '❌', loading: '⏳' };
+      gpsText.textContent = text;
+      gpsStatus.querySelector('span:first-child').textContent = icons[status];
+    }
+    
+    // ===== DATA =====
+    window.placesMap = {};
+    
+    function loadPlaces() {
+      if (isLoading) return;
+      isLoading = true;
+      showState('loading');
+      
+      google.script.run
+        .withSuccessHandler((data) => {
+          isLoading = false;
+          allPlaces = data.places || [];
+          
+          // Build lookup map
+          window.placesMap = {};
+          allPlaces.forEach(p => {
+            window.placesMap[p.id] = p;
+          });
+          
+          updateBadge(data.remaining, data.total);
+          filterAndSort();
+          
+          if (allPlaces.length === 0) {
+            showState('complete');
+          }
+        })
+        .withFailureHandler((err) => {
+          isLoading = false;
+          showToast('โหลดข้อมูลล้มเหลว: ' + err.message, 'error');
+          showState('empty');
+        })
+        .getPlaces();
+    }
+    
+    function filterAndSort() {
+      const query = searchInput.value.trim().toLowerCase();
+      const sortBy = sortSelect.value;
+      
+      // Filter
+      filteredPlaces = allPlaces.filter(p => {
+        if (!query) return true;
+        const idStr = String(p.id).toLowerCase();
+        const nameStr = (p.name || '').toLowerCase();
+        return idStr.includes(query) || nameStr.includes(query);
+      });
+      
+      // Sort
+      if (sortBy === 'nearby' && userLocation) {
+        filteredPlaces.sort((a, b) => {
+          const distA = calculateDistance(userLocation.lat, userLocation.lng, a.lat, a.lng);
+          const distB = calculateDistance(userLocation.lat, userLocation.lng, b.lat, b.lng);
+          return distA - distB;
+        });
+      } else {
+        // Default sort by id
+        filteredPlaces.sort((a, b) => {
+          const idA = parseInt(a.id) || 0;
+          const idB = parseInt(b.id) || 0;
+          return idA - idB;
+        });
+      }
+      
+      renderPlaces();
+    }
+    
+    // ===== ACTIONS =====
+    function handleNavigate(placeId) {
+      const place = window.placesMap[placeId];
+      if (place) {
+        openNavigation(place);
+      }
+    }
+    window.handleNavigate = handleNavigate;
+    
+    async function handleMarkVisited(placeId) {
+      const place = window.placesMap[placeId];
+      if (!place) return;
+      
+      const confirmed = await showModal(
+        '✅',
+        'ยืนยันการไปแล้ว',
+        `คุณไป [${place.id}] ${place.name} แล้วใช่ไหม?`,
+        'ใช่ ไปแล้ว',
+        false
+      );
+      
+      if (!confirmed) return;
+      
+      const btn = $(`visitBtn-${placeId}`);
+      if (btn) {
+        btn.disabled = true;
+        btn.classList.add('loading');
+        btn.innerHTML = '⏳ กำลังบันทึก...';
+      }
+      
+      google.script.run
+        .withSuccessHandler((result) => {
+          if (result.ok) {
+            showToast('บันทึกแล้ว! 🎉', 'success');
+            loadPlaces();
+          } else {
+            showToast(result.message || 'เกิดข้อผิดพลาด', 'error');
+            if (btn) {
+              btn.disabled = false;
+              btn.classList.remove('loading');
+              btn.innerHTML = '✅ ไปแล้ว';
+            }
+          }
+        })
+        .withFailureHandler((err) => {
+          showToast('บันทึกล้มเหลว: ' + err.message, 'error');
+          if (btn) {
+            btn.disabled = false;
+            btn.classList.remove('loading');
+            btn.innerHTML = '✅ ไปแล้ว';
+          }
+        })
+        .markVisited(placeId);
+    }
+    window.handleMarkVisited = handleMarkVisited;
+    
+    async function handleResetAll() {
+      const confirmed = await showModal(
+        '⚠️',
+        'ล้างทั้งหมด?',
+        'การล้างจะทำให้ทุกสถานที่กลับมาเป็น "ยังไม่ไป" คุณแน่ใจหรือไม่?',
+        'ล้างทั้งหมด',
+        true
+      );
+      
+      if (!confirmed) return;
+      
+      showState('loading');
+      
+      google.script.run
+        .withSuccessHandler((result) => {
+          if (result.ok) {
+            showToast(`ล้างแล้ว ${result.cleared} รายการ`, 'success');
+            loadPlaces();
+          } else {
+            showToast(result.message || 'เกิดข้อผิดพลาด', 'error');
+            loadPlaces();
+          }
+        })
+        .withFailureHandler((err) => {
+          showToast('ล้างล้มเหลว: ' + err.message, 'error');
+          loadPlaces();
+        })
+        .resetVisitedAll();
+    }
+    
+    // ===== EVENT LISTENERS =====
+    searchInput.addEventListener('input', () => {
+      filterAndSort();
+    });
+    
+    sortSelect.addEventListener('change', () => {
+      if (sortSelect.value === 'nearby' && !userLocation) {
+        requestLocation();
+      }
+      filterAndSort();
+    });
+    
+    refreshBtn.addEventListener('click', () => {
+      loadPlaces();
+      requestLocation();
+    });
+    
+    resetAllBtn.addEventListener('click', handleResetAll);
+    restartBtn.addEventListener('click', handleResetAll);
+    
+    // ===== INIT =====
+    document.addEventListener('DOMContentLoaded', () => {
+      initMap();
+      loadPlaces();
+      requestLocation();
+    });
+  </script>
+</body>
+</html>
