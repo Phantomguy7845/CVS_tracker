@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>PT Timestamp + Location (Mint Light) v2.2</title>
+  <title>PT Timestamp + Location (Mint Light) v2.3</title>
 
-  <!-- Leaflet (optional: ใช้เฉพาะตอนเปิดแผนที่) -->
+  <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -167,7 +167,6 @@
       box-shadow: var(--shadow);
     }
 
-    /* Camera Modal */
     .modalBackdrop{
       position: fixed;
       inset: 0;
@@ -208,7 +207,6 @@
       background: #000;
     }
 
-    /* Image loading indicator */
     .loadBox{
       display:flex;
       align-items:flex-start;
@@ -245,7 +243,6 @@
     .badge.wait{ border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.10); color:#7c2d12; }
     .badge.err{ border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.10); color:#7f1d1d; }
 
-    /* Log panel */
     .logBox{
       border: 1px solid rgba(2,6,23,.10);
       background: #ffffff;
@@ -284,36 +281,29 @@
   <div class="wrap">
     <header>
       <div>
-        <h1>PT Timestamp + Location (Mint Light) v2.2</h1>
+        <h1>PT Timestamp + Location (Mint Light) v2.3</h1>
         <div class="sub">
-          ✅ เพิ่ม Output size preset • ✅ เซฟค่าใน localStorage • ✅ แก้ปัญหาโหลดรูปบนมือถือ (EXIF ในตัว + fallback)
+          ✅ แก้บัค scheduleSaveSettings ถูกประกาศซ้ำ • ✅ preset size • ✅ localStorage • ✅ EXIF ในตัว + fallback
         </div>
       </div>
       <span class="pill">☀️ โหมดกลางแดด</span>
     </header>
 
-    <!-- 1) รูปภาพ -->
     <div class="card">
       <div class="label">1) รูปภาพ</div>
-
       <div class="grid2">
         <button class="btn primary" id="btnOpenCamera">📷 เปิดกล้อง (ถ่ายโดยตรง)</button>
-
         <div>
           <div class="label">เลือกจากแกลเลอรี่</div>
-          <!-- note: ใส่ capture ไว้ เผื่อบางเครื่องอยากเรียก camera app (แต่เรามี getUserMedia แล้ว) -->
           <input id="fileGallery" class="field" type="file" accept="image/*" />
         </div>
       </div>
-
       <div class="row" style="margin-top:10px">
         <span class="pill">ไม่ยืดภาพ</span>
         <span class="pill">แก้ EXIF orientation (ในตัว)</span>
       </div>
 
       <div class="hr"></div>
-
-      <!-- สถานะโหลดภาพ -->
       <div class="loadBox">
         <div class="spinner" id="imgSpinner"></div>
         <div style="display:grid; gap:6px; width:100%">
@@ -326,35 +316,30 @@
       </div>
     </div>
 
-    <!-- 2) เวลา -->
     <div class="card">
       <div class="label">2) เวลา (เลือกใช้เวลาปัจจุบัน หรือแก้เอง)</div>
-
       <div class="grid2">
         <label class="switch">
           <input id="useNow" type="checkbox" checked />
           <span>ใช้เวลาปัจจุบัน</span>
         </label>
-
         <div>
           <div class="label">แก้เวลาเอง (ถ้าไม่ติ๊กใช้เวลาปัจจุบัน)</div>
           <input id="customTime" class="field" type="datetime-local" />
         </div>
       </div>
-
       <div class="row" style="margin-top:10px">
         <button class="btn soft" id="btnSetNow">⏱ ตั้งเป็นเวลาปัจจุบัน</button>
         <span class="status" id="timeStatus"></span>
       </div>
     </div>
 
-    <!-- 3) Output + Fit Mode + Font -->
     <div class="card">
       <div class="label">3) Output & การจัดภาพ (Contain / Cover-crop) + ฟอนต์</div>
 
       <div class="grid3">
         <div>
-          <div class="label">ขนาดส่งออก</div>
+          <div class="label">โหมดขนาดส่งออก</div>
           <select id="outputMode" class="field">
             <option value="preset" selected>เลือกขนาด (Preset)</option>
             <option value="original">ขนาดรูปเดิม (ตามภาพจริง)</option>
@@ -383,11 +368,11 @@
             <option value="320x240">320 × 240</option>
             <option value="176x144">176 × 144</option>
           </select>
-          <div class="mini">ถ้าเลือก Original จะปิดการเลือกขนาด preset</div>
+          <div class="mini">ถ้าเลือก Original จะปิด preset</div>
         </div>
 
         <div>
-          <div class="label">วิธีเติมภาพในเฟรม (Contain / Cover)</div>
+          <div class="label">Fit Mode</div>
           <select id="fitMode" class="field">
             <option value="contain" selected>Contain (มีขอบดำถ้าสัดส่วนไม่ตรง)</option>
             <option value="cover">Cover (เต็มเฟรม + ครอป)</option>
@@ -427,7 +412,6 @@
       </div>
     </div>
 
-    <!-- 4) ตำแหน่ง -->
     <div class="card">
       <div class="label">4) ตำแหน่ง (เลือกใช้/ไม่ใช้ได้) — OpenStreetMap / Nominatim</div>
 
@@ -486,7 +470,6 @@
       <div class="status" id="locStatus">ปิดใช้งานตำแหน่ง</div>
     </div>
 
-    <!-- 5) Preview -->
     <div class="card">
       <div class="label">5) พรีวิว</div>
       <canvas id="canvas" width="1920" height="1440"></canvas>
@@ -495,7 +478,6 @@
       </div>
     </div>
 
-    <!-- Debug Log -->
     <div class="card">
       <div class="label">6) Log (ช่วยดูแทน Console บนมือถือ)</div>
       <label class="switch" style="margin-bottom:10px">
@@ -514,7 +496,6 @@
       <div class="mini">ถ้ารูปไม่โหลด/ปุ่มไม่ทำงาน ให้เปิด Log แล้วส่งข้อความในนี้มาได้เลย</div>
     </div>
 
-    <!-- Sticky actions -->
     <div class="stickyBar">
       <div class="grid2">
         <button class="btn primary" id="btnPreview" disabled>👁️ แสดงพรีวิว</button>
@@ -527,7 +508,6 @@
     </div>
   </div>
 
-  <!-- Camera Modal -->
   <div class="modalBackdrop" id="camBackdrop" aria-hidden="true">
     <div class="modal">
       <div class="modalHeader">
@@ -552,13 +532,13 @@
   /* =========================
      LocalStorage Settings
   ========================== */
-  const SETTINGS_KEY = "PT_TS_SETTINGS_V2_2";
+  const SETTINGS_KEY = "PT_TS_SETTINGS_V2_3";
   const DEFAULT_SETTINGS = {
     useNow: true,
     customTime: "",
-    outputMode: "preset",       // preset | original
-    outputSize: "1920x1440",    // WxH string
-    fitMode: "contain",         // contain | cover
+    outputMode: "preset",
+    outputSize: "1920x1440",
+    fitMode: "contain",
     fontAuto: true,
     fontScale: 100,
     fontPx: 32,
@@ -624,14 +604,14 @@
   const btnSwitchCam   = document.getElementById('btnSwitchCam');
   const camStatus      = document.getElementById('camStatus');
 
-  // Log UI
+  // Log
   const enableLogPanel = document.getElementById('enableLogPanel');
   const logBox         = document.getElementById('logBox');
   const logPre         = document.getElementById('logPre');
   const btnClearLog    = document.getElementById('btnClearLog');
 
   /* =========================
-     Logger (แทน console บนมือถือ)
+     Logger
   ========================== */
   const logs = [];
   function ts() {
@@ -644,7 +624,6 @@
     if (logs.length > 250) logs.shift();
     if (enableLogPanel.checked) logPre.textContent = logs.join("\n");
   }
-  // capture errors
   window.addEventListener("error", (e) => {
     addLog(`❌ error: ${e.message || "unknown"} @ ${e.filename || ""}:${e.lineno || ""}`);
   });
@@ -667,7 +646,7 @@
   let camStream = null;
   let facingMode = "environment";
 
-  let imageState = "idle"; // idle | loading | ready | error
+  let imageState = "idle";
   let lastLoadedName = "";
 
   /* =========================
@@ -716,7 +695,7 @@
       imgHint.textContent = "ตอนนี้กด “แสดงพรีวิว” ได้เลย";
       imgStatus.textContent = extraText || imgStatus.textContent;
       btnPreview.disabled = false;
-      btnDownload.disabled = true; // เปิดหลัง render
+      btnDownload.disabled = true;
       return;
     }
     if (state === "error"){
@@ -748,7 +727,6 @@
     return `${d} ${m}. ${y} ${hh} นาฬิกา ${mm} นาที ${ss} วินาที ${tz}`;
   }
 
-  // ชื่อไฟล์ = เวลาตอนกดดาวน์โหลด (ตามที่ต้องการ)
   function buildFilenameFromNow(){
     const date = new Date();
     const yyyy = date.getFullYear();
@@ -770,7 +748,6 @@
   }
 
   function parseOutputSize(){
-    // returns {w,h} from "WxH"
     const v = (outputSize.value || "1920x1440").toLowerCase().trim();
     const m = v.match(/^(\d+)\s*x\s*(\d+)$/);
     if (!m) return { w: 1920, h: 1440 };
@@ -843,8 +820,6 @@
 
     ctx.shadowColor = "rgba(0,0,0,.85)";
     ctx.shadowBlur = Math.round(fontSize * 0.35);
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
 
     const x = outW - padding;
     let y = padding;
@@ -856,12 +831,8 @@
   }
 
   /* =========================
-     Robust Image Loading (Mobile friendly)
-     - ไม่พึ่ง ExifReader CDN
-     - อ่าน EXIF orientation แบบเบา ๆ ในตัว
-     - fallback: ถ้า blob URL ใช้ไม่ได้ -> DataURL
+     Robust Image Loading
   ========================== */
-
   async function fileToDataURL(file){
     return new Promise((resolve, reject) => {
       const r = new FileReader();
@@ -871,32 +842,26 @@
     });
   }
 
-  // Minimal EXIF orientation reader (JPEG)
   async function getExifOrientation(file){
     try{
       if (!file || !file.type || !file.type.toLowerCase().includes("jpeg")) return 1;
       const buf = await file.arrayBuffer();
       const view = new DataView(buf);
 
-      // JPEG SOI
       if (view.getUint16(0, false) !== 0xFFD8) return 1;
-
       let offset = 2;
       const length = view.byteLength;
 
       while (offset < length){
-        // find marker
         if (view.getUint8(offset) !== 0xFF) break;
         const marker = view.getUint16(offset, false);
         offset += 2;
 
-        // APP1
         if (marker === 0xFFE1){
           const app1Length = view.getUint16(offset, false);
           offset += 2;
 
-          // "Exif\0\0"
-          if (view.getUint32(offset, false) !== 0x45786966) return 1;
+          if (view.getUint32(offset, false) !== 0x45786966) return 1; // Exif
           offset += 6;
 
           const tiffOffset = offset;
@@ -907,7 +872,6 @@
           const getU16 = (o) => view.getUint16(o, little);
           const getU32 = (o) => view.getUint32(o, little);
 
-          // 0x002A
           if (getU16(tiffOffset + 2) !== 0x002A) return 1;
 
           const ifd0Offset = getU32(tiffOffset + 4);
@@ -921,7 +885,7 @@
             const entryOffset = dirOffset + i*12;
             if (entryOffset + 12 > length) break;
             const tag = getU16(entryOffset);
-            if (tag === 0x0112){ // Orientation
+            if (tag === 0x0112){
               const type = getU16(entryOffset + 2);
               const count = getU32(entryOffset + 4);
               if (type !== 3 || count !== 1) return 1;
@@ -932,7 +896,6 @@
           }
           return 1;
         } else {
-          // skip segment
           if (offset + 2 > length) break;
           const size = view.getUint16(offset, false);
           offset += size;
@@ -952,7 +915,6 @@
     const c = correctedCanvas;
     const cctx = c.getContext("2d");
 
-    // set canvas size depending on orientation
     if ([5,6,7,8].includes(orientation)){
       c.width = h; c.height = w;
     } else {
@@ -976,7 +938,6 @@
   }
 
   async function loadImageFromFile(file){
-    // try blob url first, fallback to dataurl
     const blobUrl = URL.createObjectURL(file);
     try{
       await new Promise((resolve, reject) => {
@@ -984,14 +945,12 @@
         im.onload = () => resolve(im);
         im.onerror = () => reject(new Error("Image onerror(blobUrl)"));
         im.src = blobUrl;
-        // keep reference
         sourceImg = im;
       });
       return;
     } catch (e){
       addLog(`blobUrl failed -> fallback DataURL: ${String(e.message || e)}`);
-      URL.revokeObjectURL(blobUrl);
-
+      try { URL.revokeObjectURL(blobUrl); } catch {}
       const dataUrl = await fileToDataURL(file);
       await new Promise((resolve, reject) => {
         const im = new Image();
@@ -1002,11 +961,7 @@
       });
       return;
     } finally {
-      // revoke blobUrl if still used
-      // if sourceImg.src === blobUrl, revoke after decode to avoid breaking before draw
-      setTimeout(() => {
-        try{ URL.revokeObjectURL(blobUrl); } catch {}
-      }, 1500);
+      setTimeout(() => { try { URL.revokeObjectURL(blobUrl); } catch {} }, 1500);
     }
   }
 
@@ -1025,10 +980,8 @@
         return;
       }
 
-      // load into Image
       await loadImageFromFile(file);
 
-      // guard: ensure dimensions
       const w = sourceImg.naturalWidth;
       const h = sourceImg.naturalHeight;
       if (!w || !h){
@@ -1039,7 +992,6 @@
       let info = `โหลดรูปแล้ว: ${lastLoadedName}\nขนาดเดิม: ${w}×${h}`;
 
       if (fromCamera){
-        // camera by direct -> assume orientation 1
         correctedCanvas.width = w;
         correctedCanvas.height = h;
         correctedCanvas.getContext("2d").drawImage(sourceImg, 0, 0);
@@ -1060,9 +1012,6 @@
     }
   }
 
-  /* =========================
-     Draw contain/cover into output
-  ========================== */
   function drawContain(src, outW, outH){
     ctx.clearRect(0, 0, outW, outH);
     ctx.fillStyle = "#000";
@@ -1075,7 +1024,6 @@
     const dh = Math.round(sh * scale);
     const dx = Math.round((outW - dw) / 2);
     const dy = Math.round((outH - dh) / 2);
-
     ctx.drawImage(src, 0, 0, sw, sh, dx, dy, dw, dh);
   }
 
@@ -1091,21 +1039,12 @@
     const dh = Math.round(sh * scale);
     const dx = Math.round((outW - dw) / 2);
     const dy = Math.round((outH - dh) / 2);
-
     ctx.drawImage(src, 0, 0, sw, sh, dx, dy, dw, dh);
   }
 
-  /* =========================
-     Nominatim
-  ========================== */
   async function reverseGeocode(lat, lng){
     const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}&zoom=18&addressdetails=1`;
-    const res = await fetch(url, {
-      headers: {
-        "Accept": "application/json",
-        "Accept-Language": "th-TH,th;q=0.9,en;q=0.7"
-      }
-    });
+    const res = await fetch(url, { headers: { "Accept":"application/json", "Accept-Language":"th-TH,th;q=0.9,en;q=0.7" } });
     if (!res.ok) throw new Error("Reverse geocode failed");
     const data = await res.json();
     return data?.display_name || "";
@@ -1113,20 +1052,11 @@
 
   async function forwardGeocode(q){
     const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(q)}&limit=1`;
-    const res = await fetch(url, {
-      headers: {
-        "Accept": "application/json",
-        "Accept-Language": "th-TH,th;q=0.9,en;q=0.7"
-      }
-    });
+    const res = await fetch(url, { headers: { "Accept":"application/json", "Accept-Language":"th-TH,th;q=0.9,en;q=0.7" } });
     if (!res.ok) throw new Error("Search place failed");
     const data = await res.json();
     if (!Array.isArray(data) || data.length === 0) return null;
-    return {
-      lat: Number(data[0].lat),
-      lng: Number(data[0].lon),
-      display_name: data[0].display_name || ""
-    };
+    return { lat: Number(data[0].lat), lng: Number(data[0].lon), display_name: data[0].display_name || "" };
   }
 
   async function refreshAddressIfNeeded(){
@@ -1156,12 +1086,10 @@
     } else {
       msg += "Address: (ปิดการแสดงที่อยู่)";
     }
+
     locStatus.textContent = msg;
   }
 
-  /* =========================
-     Render
-  ========================== */
   async function render(){
     btnDownload.disabled = true;
 
@@ -1202,13 +1130,9 @@
       else drawContain(src, outW, outH);
     }
 
-    // address lazy fetch
     if (enableLocation.checked && hasValidLatLng() && showAddress.checked && !addressText){
-      try{
-        addressText = await reverseGeocode(Number(latEl.value), Number(lngEl.value));
-      } catch (e){
-        addLog(`reverseGeocode(lazy) failed: ${String(e.message || e)}`);
-      }
+      try { addressText = await reverseGeocode(Number(latEl.value), Number(lngEl.value)); }
+      catch (e){ addLog(`reverseGeocode(lazy) failed: ${String(e.message || e)}`); }
     }
 
     const lines = buildOverlayLines(d);
@@ -1223,7 +1147,6 @@
 
   function download(){
     if (btnDownload.disabled) return;
-
     const name = buildFilenameFromNow();
     const link = document.createElement("a");
     link.download = name;
@@ -1232,9 +1155,6 @@
     addLog(`⬇️ download: ${name}`);
   }
 
-  /* =========================
-     Map Picker (Leaflet optional)
-  ========================== */
   function openMap(){
     if (!window.L){
       locStatus.textContent = "แผนที่โหลดไม่สำเร็จ (Leaflet) — ตรวจเน็ต/เปิดผ่าน https";
@@ -1277,9 +1197,6 @@
     mapWrap.style.display = "none";
   }
 
-  /* =========================
-     Camera (getUserMedia)
-  ========================== */
   function showCamModal(on){
     camBackdrop.style.display = on ? "flex" : "none";
     camBackdrop.setAttribute("aria-hidden", on ? "false" : "true");
@@ -1372,6 +1289,7 @@
     outputMode.value = s.outputMode || "preset";
     outputSize.value = s.outputSize || "1920x1440";
     fitMode.value = s.fitMode || "contain";
+
     fontAuto.checked = !!s.fontAuto;
     fontScale.value = String(s.fontScale ?? 100);
     fontPx.value = String(s.fontPx ?? 32);
@@ -1426,14 +1344,9 @@
     }, 250);
   }
 
-  // expose for internal usage (map click uses it)
-  const scheduleSaveSettings = scheduleSaveSettings;
-
   /* =========================
      Events
   ========================== */
-
-  // IMPORTANT: บางมือถือถ้าเลือกไฟล์เดิมซ้ำ จะไม่ยิง change -> reset value ตอนกด
   fileGallery.addEventListener("click", () => { fileGallery.value = ""; });
 
   fileGallery.addEventListener("change", (e) => {
@@ -1541,7 +1454,6 @@
   btnPreview.addEventListener("click", render);
   btnDownload.addEventListener("click", download);
 
-  // Camera UI
   btnOpenCamera.addEventListener("click", async () => {
     showCamModal(true);
     await startCamera();
@@ -1556,7 +1468,6 @@
   });
   btnSnap.addEventListener("click", snapPhoto);
 
-  // Log panel
   enableLogPanel.addEventListener("change", () => {
     logBox.style.display = enableLogPanel.checked ? "block" : "none";
     if (enableLogPanel.checked) logPre.textContent = logs.join("\n");
@@ -1568,7 +1479,6 @@
     addLog("log cleared");
   });
 
-  // Cleanup
   window.addEventListener("beforeunload", () => {
     try{ stopCamera(); } catch {}
   });
@@ -1576,21 +1486,15 @@
   /* =========================
      Init
   ========================== */
-  addLog("boot v2.2");
+  addLog("boot v2.3");
   setImageUIState("idle");
   updateOutputUI();
   updateFontUI();
   setTimeUIStatus();
   locStatus.textContent = "ปิดใช้งานตำแหน่ง";
 
-  // load settings
   const s = readSettings();
   applySettings(s);
-
-  // ensure UI correct after applying
-  updateOutputUI();
-  updateFontUI();
-  setTimeUIStatus();
 
 })();
 </script>
