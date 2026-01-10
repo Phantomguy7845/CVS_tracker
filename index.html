@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>PT Timestamp + Location (Mint Light) v2.3</title>
+  <title>PT Timestamp + Location (Mint Light) v2.4</title>
 
   <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -281,9 +281,9 @@
   <div class="wrap">
     <header>
       <div>
-        <h1>PT Timestamp + Location (Mint Light) v2.3</h1>
+        <h1>PT Timestamp + Location (Mint Light) v2.4</h1>
         <div class="sub">
-          ✅ แก้บัค scheduleSaveSettings ถูกประกาศซ้ำ • ✅ preset size • ✅ localStorage • ✅ EXIF ในตัว + fallback
+          ✅ เพิ่ม: กด “แสดงพรีวิว” แล้วเลื่อนไปส่วน 5) พรีวิว อัตโนมัติ • ✅ preset size • ✅ localStorage • ✅ EXIF ในตัว + fallback
         </div>
       </div>
       <span class="pill">☀️ โหมดกลางแดด</span>
@@ -470,7 +470,8 @@
       <div class="status" id="locStatus">ปิดใช้งานตำแหน่ง</div>
     </div>
 
-    <div class="card">
+    <!-- ✅ เพิ่ม id="previewSection" เพื่อเลื่อนมาหาส่วนนี้ -->
+    <div class="card" id="previewSection">
       <div class="label">5) พรีวิว</div>
       <canvas id="canvas" width="1920" height="1440"></canvas>
       <div class="row" style="margin-top:10px">
@@ -529,10 +530,7 @@
 (() => {
   "use strict";
 
-  /* =========================
-     LocalStorage Settings
-  ========================== */
-  const SETTINGS_KEY = "PT_TS_SETTINGS_V2_3";
+  const SETTINGS_KEY = "PT_TS_SETTINGS_V2_4";
   const DEFAULT_SETTINGS = {
     useNow: true,
     customTime: "",
@@ -551,9 +549,6 @@
     enableLogPanel: false
   };
 
-  /* =========================
-     DOM
-  ========================== */
   const fileGallery = document.getElementById('fileGallery');
 
   const imgSpinner  = document.getElementById('imgSpinner');
@@ -595,6 +590,9 @@
   const ctx         = canvas.getContext('2d', { alpha: false });
   const renderStatus= document.getElementById('renderStatus');
 
+  // ✅ เป้าหมาย scroll
+  const previewSection = document.getElementById('previewSection');
+
   // Camera
   const btnOpenCamera  = document.getElementById('btnOpenCamera');
   const camBackdrop    = document.getElementById('camBackdrop');
@@ -610,9 +608,6 @@
   const logPre         = document.getElementById('logPre');
   const btnClearLog    = document.getElementById('btnClearLog');
 
-  /* =========================
-     Logger
-  ========================== */
   const logs = [];
   function ts() {
     const d = new Date();
@@ -631,9 +626,6 @@
     addLog(`❌ promise: ${String(e.reason || "unknown")}`);
   });
 
-  /* =========================
-     State
-  ========================== */
   let sourceFile = null;
   let sourceImg  = new Image();
   let correctedCanvas = document.createElement('canvas');
@@ -649,9 +641,6 @@
   let imageState = "idle";
   let lastLoadedName = "";
 
-  /* =========================
-     Helpers
-  ========================== */
   const pad2 = (n) => String(n).padStart(2,'0');
   const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 
@@ -830,9 +819,6 @@
     ctx.restore();
   }
 
-  /* =========================
-     Robust Image Loading
-  ========================== */
   async function fileToDataURL(file){
     return new Promise((resolve, reject) => {
       const r = new FileReader();
@@ -858,10 +844,8 @@
         offset += 2;
 
         if (marker === 0xFFE1){
-          const app1Length = view.getUint16(offset, false);
-          offset += 2;
-
-          if (view.getUint32(offset, false) !== 0x45786966) return 1; // Exif
+          offset += 2; // segment length
+          if (view.getUint32(offset, false) !== 0x45786966) return 1;
           offset += 6;
 
           const tiffOffset = offset;
@@ -1268,9 +1252,6 @@
     }, "image/jpeg", 0.95);
   }
 
-  /* =========================
-     Settings persistence
-  ========================== */
   function readSettings(){
     try{
       const raw = localStorage.getItem(SETTINGS_KEY);
@@ -1342,6 +1323,18 @@
         addLog(`saveSettings failed: ${String(e.message || e)}`);
       }
     }, 250);
+  }
+
+  /* =========================
+     ✅ Scroll to Preview helper
+  ========================== */
+  function scrollToPreview(){
+    try{
+      previewSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch {
+      // fallback
+      window.location.hash = "#previewSection";
+    }
   }
 
   /* =========================
@@ -1451,7 +1444,12 @@
     }
   });
 
-  btnPreview.addEventListener("click", render);
+  // ✅ เปลี่ยน handler: render แล้วเลื่อนไปพรีวิวทันที (ไม่ว่าจออยู่ตรงไหน)
+  btnPreview.addEventListener("click", async () => {
+    await render();
+    scrollToPreview();
+  });
+
   btnDownload.addEventListener("click", download);
 
   btnOpenCamera.addEventListener("click", async () => {
@@ -1483,17 +1481,23 @@
     try{ stopCamera(); } catch {}
   });
 
-  /* =========================
-     Init
-  ========================== */
-  addLog("boot v2.3");
+  addLog("boot v2.4");
   setImageUIState("idle");
   updateOutputUI();
   updateFontUI();
   setTimeUIStatus();
   locStatus.textContent = "ปิดใช้งานตำแหน่ง";
 
-  const s = readSettings();
+  const s = (() => {
+    try{
+      const raw = localStorage.getItem(SETTINGS_KEY);
+      if (!raw) return { ...DEFAULT_SETTINGS };
+      const obj = JSON.parse(raw);
+      return { ...DEFAULT_SETTINGS, ...(obj || {}) };
+    } catch {
+      return { ...DEFAULT_SETTINGS };
+    }
+  })();
   applySettings(s);
 
 })();
